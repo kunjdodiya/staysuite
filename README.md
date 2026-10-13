@@ -1,5 +1,7 @@
 # StaySuite
 
+**Live:** https://kunjdodiya.github.io/staysuite/ — redeployed automatically on every push to `main` (`.github/workflows/deploy.yml`).
+
 Property management for cabins, homestays, guesthouses, boutique hotels and short-term rentals: bookings, guests, money, receipts, housekeeping and reports in one app. One React codebase runs as a web app/PWA and, through Capacitor, as native iOS and Android apps.
 
 ## Run it
