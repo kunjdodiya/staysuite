@@ -20,6 +20,8 @@ import { TEMPLATE_VARS } from '@/domain/templates';
 import { formatDocNumber } from '@/domain/documents';
 import type { BusinessSettings, MessageTemplate, Role, StaffMember } from '@/domain/types';
 import { cn } from '@/lib/cn';
+import { isNative } from '@/native';
+import { nativeNotificationPermission } from '@/native/reminders';
 
 type Section = 'business' | 'invoicing' | 'locale' | 'team' | 'messages' | 'notifications' | 'integrations' | 'data' | 'activity';
 
@@ -356,7 +358,8 @@ function NotificationsSection() {
   const restore = useStore((s) => s.restoreAlerts);
   const [theme, setTheme] = useTheme();
   const set = (patch: Partial<typeof prefs>) => update({ notificationPrefs: { ...prefs, ...patch } });
-  const [perm, setPerm] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
+  const [perm, setPerm] = useState<string>(isNative ? 'prompt' : typeof Notification !== 'undefined' ? Notification.permission : 'denied');
+  useEffect(() => { if (isNative) nativeNotificationPermission().then(setPerm); }, []);
   return (
     <>
       <Card>
@@ -370,10 +373,15 @@ function NotificationsSection() {
         <div className="px-5 pb-5 space-y-5">
           <Switch checked={prefs.inApp} onChange={(v) => set({ inApp: v })} label="In-app alerts" description="Arrivals, balances, tasks, renewals — in the bell menu" disabled={!canSettings} />
           <Switch checked={prefs.push && perm === 'granted'} onChange={async (v) => {
-            if (v && typeof Notification !== 'undefined' && Notification.permission !== 'granted') { const r = await Notification.requestPermission(); setPerm(r); if (r !== 'granted') return toast.error('Notifications are blocked in your browser settings'); }
+            if (v) {
+              const r = isNative ? await nativeNotificationPermission(true) : typeof Notification !== 'undefined' ? await Notification.requestPermission() : 'denied';
+              setPerm(r === 'granted' ? 'granted' : 'denied');
+              if (r !== 'granted') return toast.error(isNative ? 'Allow notifications for StaySuite in your phone settings' : 'Notifications are blocked in your browser settings');
+            }
             set({ push: v });
-            if (v) new Notification('StaySuite', { body: 'Push notifications are on for this device.' });
-          }} label="Push notifications on this device" description={perm === 'denied' ? 'Blocked by the browser — allow notifications for this site first' : 'Phone and desktop alerts, even when the app is closed (installed app)'} />
+            if (v && !isNative) new Notification('StaySuite', { body: 'Push notifications are on for this device.' });
+            if (v && isNative) toast.success('Reminders on', { description: 'Morning briefings on busy days and alerts before bills are due' });
+          }} label={isNative ? 'Phone notifications' : 'Push notifications on this device'} description={perm === 'denied' ? (isNative ? 'Turn on notifications for StaySuite in your phone settings' : 'Blocked by the browser — allow notifications for this site first') : isNative ? '8 am briefing on days with arrivals, departures or tasks, plus bill reminders — even when the app is closed' : 'Phone and desktop alerts, even when the app is closed (installed app)'} />
           <Switch checked={prefs.email} onChange={(v) => set({ email: v })} label="Email notifications" description="Delivered once cloud sync is enabled for your account" disabled={!canSettings} />
           <Switch checked={prefs.dailySummary} onChange={(v) => set({ dailySummary: v })} label="Daily summary" description="Today's arrivals, departures, tasks and money due" disabled={!canSettings} />
           <Switch checked={prefs.monthlySummary} onChange={(v) => set({ monthlySummary: v })} label="Monthly financial summary" description="Revenue, expenses and profit on the 1st" disabled={!canSettings} />

@@ -50,6 +50,9 @@
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
+  /* Native shells: no text selection callouts or rubber-band overscroll on chrome, like a native app */
+  html.native-ios, html.native-android { -webkit-user-select: none; user-select: none; overscroll-behavior-y: none; -webkit-touch-callout: none; }
+  html.native-ios :is(input, textarea, [contenteditable]), html.native-android :is(input, textarea, [contenteditable]) { -webkit-user-select: text; user-select: text; }
   body {
     @apply bg-bg text-fg font-sans antialiased;
     font-feature-settings: 'cv11', 'ss01', 'tnum' 0;
@@ -75,8 +78,9 @@
   .hint { @apply text-xs text-muted; }
   .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle; }
   .divide { @apply border-t border-border; }
-  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
-  .pt-safe { padding-top: env(safe-area-inset-top); }
+  /* env() covers iOS & modern Android WebViews; --safe-area-inset-* is injected by Capacitor on older Android */
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)); }
+  .pt-safe { padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)); }
 }
 
 .skeleton { position: relative; overflow: hidden; background: rgb(var(--surface-2)); border-radius: 10px; }

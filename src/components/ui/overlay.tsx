@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -117,7 +117,17 @@ export interface MenuItem { label: ReactNode; icon?: ReactNode; onClick: () => v
 
 export function Menu({ trigger, items, align = 'right', placement = 'bottom' }: { trigger: (p: { onClick: () => void; open: boolean }) => ReactNode; items: (MenuItem | 'divider')[]; align?: 'left' | 'right' | 'center'; placement?: 'bottom' | 'top' }) {
   const [open, setOpen] = useState(false);
+  const [side, setSide] = useState(align);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  // Flip horizontally if the menu would overflow the viewport (e.g. a right-aligned menu on a left-side button on phones)
+  useLayoutEffect(() => {
+    if (!open) { setSide(align); return; }
+    const r = menuRef.current?.getBoundingClientRect();
+    if (!r) return;
+    if (r.left < 8 && side !== 'left') setSide('left');
+    else if (r.right > window.innerWidth - 8 && side !== 'right') setSide('right');
+  }, [open, side, align]);
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
@@ -131,7 +141,7 @@ export function Menu({ trigger, items, align = 'right', placement = 'bottom' }: 
     <div className="relative inline-block" ref={ref}>
       {trigger({ onClick: () => setOpen((o) => !o), open })}
       {open && (
-        <div className={cn('absolute z-40 min-w-[200px] p-1.5 bg-surface border border-border rounded-xl shadow-pop animate-rise-in', placement === 'top' ? 'bottom-full mb-2' : 'mt-1.5', align === 'right' ? 'right-0' : align === 'center' ? 'left-1/2 -ml-[110px] w-[220px]' : 'left-0')} role="menu">
+        <div ref={menuRef} className={cn('absolute z-40 min-w-[200px] max-w-[calc(100vw-16px)] p-1.5 bg-surface border border-border rounded-xl shadow-pop animate-rise-in', placement === 'top' ? 'bottom-full mb-2' : 'mt-1.5', side === 'right' ? 'right-0' : side === 'center' ? 'left-1/2 -ml-[110px] w-[220px]' : 'left-0')} role="menu">
           {visible.map((it, i) =>
             it === 'divider' ? <div key={i} className="my-1 divide" /> : (
               <button
@@ -139,7 +149,7 @@ export function Menu({ trigger, items, align = 'right', placement = 'bottom' }: 
                 role="menuitem"
                 disabled={it.disabled}
                 onClick={() => { setOpen(false); it.onClick(); }}
-                className={cn('w-full flex items-center gap-2.5 h-9 px-2.5 rounded-lg text-[13.5px] text-left transition-colors disabled:opacity-40',
+                className={cn('w-full flex items-center gap-2.5 min-h-9 py-2 px-2.5 rounded-lg text-[13.5px] leading-snug text-left transition-colors disabled:opacity-40',
                   it.danger ? 'text-danger hover:bg-danger/10' : 'text-fg hover:bg-surface-2')}
               >
                 {it.icon && <span className="text-muted [&>svg]:h-4 [&>svg]:w-4">{it.icon}</span>}

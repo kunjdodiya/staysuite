@@ -6,7 +6,8 @@ import { Button, Badge, Field, Select, Textarea, Segmented, EmptyState } from '@
 import { useStore } from '@/data/store';
 import { useCan, useData, useLedgers, useMoney } from '@/data/hooks';
 import { openOverlay } from '@/data/ui';
-import { downloadBlob } from '@/lib/download';
+import { downloadBlob, shareFileNative } from '@/lib/download';
+import { Capacitor } from '@capacitor/core';
 import { fmtDate } from '@/lib/dates';
 import { invoiceSnapshot, kindForTxn, receiptSnapshot } from '@/domain/documents';
 import { docKindLabel, txnKindLabel } from '@/domain/labels';
@@ -26,6 +27,8 @@ export async function downloadDoc(doc: IssuedDocument) {
 
 async function printDoc(doc: IssuedDocument) {
   const blob = await pdfBlob(doc);
+  // Native: the share sheet includes Print on iOS and Android
+  if (Capacitor.isNativePlatform()) { await shareFileNative(blob, pdfFilename(doc), `${docTitle(doc)} ${doc.number}`); return; }
   const url = URL.createObjectURL(blob);
   const w = window.open(url, '_blank');
   if (!w) { downloadBlob(blob, pdfFilename(doc)); toast.info('Pop-ups are blocked — the PDF was downloaded instead'); }
@@ -35,6 +38,7 @@ async function printDoc(doc: IssuedDocument) {
 /** Native share sheet with the PDF attached (mobile & Safari), falling back to download. */
 async function shareDoc(doc: IssuedDocument) {
   const blob = await pdfBlob(doc);
+  if (Capacitor.isNativePlatform()) { await shareFileNative(blob, pdfFilename(doc), `${docTitle(doc)} ${doc.number}`); return; }
   const file = new File([blob], pdfFilename(doc), { type: 'application/pdf' });
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.share && nav.canShare?.({ files: [file] })) {
@@ -87,8 +91,8 @@ export function DocumentViewer({ documentId, onClose }: { documentId: ID; onClos
             }}>Reissue</Button>
           )}
           <div className="flex-1" />
-          <Button icon={<Printer className="h-4 w-4" />} loading={busy === 'print'} onClick={() => run('print', () => printDoc(doc))} className="hidden sm:inline-flex">Print</Button>
-          <Button variant="primary" icon={<Download className="h-4 w-4" />} loading={busy === 'dl'} onClick={() => run('dl', () => downloadDoc(doc))}>Download PDF</Button>
+          {!Capacitor.isNativePlatform() && <Button icon={<Printer className="h-4 w-4" />} loading={busy === 'print'} onClick={() => run('print', () => printDoc(doc))} className="hidden sm:inline-flex">Print</Button>}
+          <Button variant="primary" icon={<Download className="h-4 w-4" />} loading={busy === 'dl'} onClick={() => run('dl', () => downloadDoc(doc))}>{Capacitor.isNativePlatform() ? 'Save PDF' : 'Download PDF'}</Button>
         </div>
       }
     >

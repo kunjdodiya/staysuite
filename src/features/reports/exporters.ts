@@ -1,4 +1,4 @@
-import { downloadCSV, downloadXLSX } from '@/lib/download';
+import { downloadBlob, downloadCSV, downloadXLSX } from '@/lib/download';
 
 export interface ReportTable {
   title: string;
@@ -60,5 +60,5 @@ export async function exportPDF(tables: ReportTable[], filename: string, meta: {
     pdf.setPage(p); pdf.setFontSize(8); pdf.setTextColor(140, 143, 140);
     pdf.text(`Generated ${new Date().toLocaleString(meta.locale)} · page ${p} of ${pages}`, W - 40, pdf.internal.pageSize.getHeight() - 20, { align: 'right' });
   }
-  pdf.save(`${filename}.pdf`);
+  downloadBlob(pdf.output('blob'), `${filename}.pdf`);
 }

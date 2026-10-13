@@ -32,7 +32,8 @@ export function BookingForm({ bookingId, unitId, checkIn, checkOut, guestId, onC
   const units = data.units.filter((u) => !u.archived || u.id === existing?.unitId);
   const [f, setF] = useState(() => ({
     guestId: existing?.guestId ?? guestId ?? '',
-    unitId: existing?.unitId ?? unitId ?? units[0]?.id ?? '',
+    // Default to the first unit that's free for the default dates, so the form never opens on a conflict
+    unitId: existing?.unitId ?? unitId ?? (units.find((u) => !findConflicts(data.bookings, u.id, checkIn ?? today, checkOut ?? addDaysISO(checkIn ?? today, 2)).length) ?? units[0])?.id ?? '',
     checkIn: existing?.checkIn ?? checkIn ?? today,
     checkOut: existing?.checkOut ?? checkOut ?? addDaysISO(checkIn ?? today, 2),
     adults: existing?.adults ?? 2,

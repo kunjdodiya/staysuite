@@ -10,6 +10,7 @@ import { useCan } from './data/hooks';
 import type { Capability } from './domain/permissions';
 import { EmptyState } from './components/ui';
 import { Lock } from 'lucide-react';
+import { hideSplash } from './native';
 
 const Dashboard = lazy(() => import('./features/dashboard/DashboardPage'));
 const Bookings = lazy(() => import('./features/bookings/BookingsPage'));
@@ -72,6 +73,7 @@ export function App() {
   const hydrated = useStore((s) => s.hydrated);
   const hydrate = useStore((s) => s.hydrate);
   useEffect(() => { hydrate(); }, [hydrate]);
+  useEffect(() => { if (hydrated) hideSplash(); }, [hydrated]);
   if (!hydrated) return <Boot />;
   return (
     <ErrorBoundary>

@@ -14,7 +14,7 @@ import { periodSummary } from '@/domain/finance';
 import { docCategoryLabel, propertyTypeLabel, readinessLabel, unitTypeLabel, options } from '@/domain/labels';
 import type { PropertyDocument, RateRule, Readiness, Unit } from '@/domain/types';
 import { PropertyDocForm, PropertyForm, RateRuleForm, UnitForm } from './PropertyForms';
-import { downloadBlob } from '@/lib/download';
+import { downloadBlob, dataUrlToBlob } from '@/lib/download';
 import { cn } from '@/lib/cn';
 import { parseISO } from 'date-fns';
 
@@ -259,7 +259,7 @@ function DocsTab({ propertyId, docs }: { propertyId: string; docs: PropertyDocum
                   <div className="text-[12px] text-muted">{docCategoryLabel[d.category]}{d.fileName ? ` · ${d.fileName}` : ''}{d.notes ? ` · ${d.notes}` : ''}</div>
                 </div>
                 {days != null && <Badge tone={days < 0 ? 'danger' : days <= 45 ? 'warning' : 'neutral'}>{days < 0 ? 'Expired' : `Expires ${fmtDate(d.expiresOn!, 'd MMM yyyy')}`}</Badge>}
-                {d.fileDataUrl && <Button size="icon-sm" variant="ghost" title="Download" onClick={() => { const a = document.createElement('a'); a.href = d.fileDataUrl!; a.download = d.fileName; a.click(); }}><Download className="h-4 w-4" /></Button>}
+                {d.fileDataUrl && <Button size="icon-sm" variant="ghost" title="Download" onClick={() => downloadBlob(dataUrlToBlob(d.fileDataUrl!), d.fileName || `${d.name}.pdf`)}><Download className="h-4 w-4" /></Button>}
                 {canEdit && <Menu trigger={({ onClick }) => <Button size="icon-sm" variant="ghost" onClick={onClick}><MoreHorizontal className="h-4 w-4" /></Button>} items={[
                   { label: 'Edit', icon: <Pencil />, onClick: () => setEditing(d) },
                   { label: 'Delete', icon: <Trash2 />, danger: true, onClick: async () => { if (await confirm({ title: `Delete ${d.name}?`, danger: true, confirmLabel: 'Delete' })) del(d.id); } },

@@ -9,7 +9,11 @@ import { useStore } from './data/store';
 // Dev-only handle for debugging in the console
 if (import.meta.env.DEV) (window as unknown as { __ss: typeof useStore }).__ss = useStore;
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) registerSW({ immediate: true });
+import { initNative, isNative } from './native';
+
+// Service workers aren't used inside the native shells (assets are bundled in the app)
+if ('serviceWorker' in navigator && import.meta.env.PROD && !isNative) registerSW({ immediate: true });
+initNative();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

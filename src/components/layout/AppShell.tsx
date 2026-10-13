@@ -87,7 +87,7 @@ function ThemeToggle() {
   );
 }
 
-function UserMenu() {
+function UserMenu({ expanded }: { expanded?: boolean }) {
   const user = useCurrentUser();
   const staff = useStore((s) => s.data.staff);
   const setCurrentUser = useStore((s) => s.setCurrentUser);
@@ -98,7 +98,7 @@ function UserMenu() {
       trigger={({ onClick }) => (
         <button onClick={onClick} className="flex items-center gap-2.5 w-full p-2 rounded-xl hover:bg-surface-2 transition-colors text-left">
           <Avatar name={user?.name ?? '?'} size={32} />
-          <span className="min-w-0 flex-1 hidden lg:block">
+          <span className={cn('min-w-0 flex-1', expanded ? 'block' : 'hidden lg:block')}>
             <span className="block text-[13px] font-medium truncate">{user?.name}</span>
             <span className="block text-[11.5px] text-subtle">{user ? roleLabel[user.role] : ''}</span>
           </span>
@@ -238,7 +238,7 @@ function MobileNav() {
             </NavLink>
           ))}
         </div>
-        <div className="mt-6"><UserMenu /></div>
+        <div className="mt-6 rounded-2xl border border-border"><UserMenu expanded /></div>
       </Drawer>
     </>
   );

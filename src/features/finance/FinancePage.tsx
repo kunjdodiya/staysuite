@@ -12,7 +12,7 @@ import { useCan, useData, useLedgers, useLookup, useMoney, useToday } from '@/da
 import { useStore } from '@/data/store';
 import { openOverlay } from '@/data/ui';
 import { addMonthsISO, fmtDate, monthKey, relDay, startOfMonthISO, endOfMonthISO, nightsBetween } from '@/lib/dates';
-import { downloadCSV } from '@/lib/download';
+import { downloadBlob, downloadCSV, dataUrlToBlob } from '@/lib/download';
 import { parseAmount, toMajor } from '@/lib/money';
 import { outstanding, pctChange, periodSummary } from '@/domain/finance';
 import { expenseCategoryLabel, frequencyLabel, incomeCategoryLabel, methodLabel, options, purposeLabel, txnKindLabel } from '@/domain/labels';
@@ -295,7 +295,7 @@ function Transactions() {
                     const r = issue(t.kind === 'expense' ? 'expense_voucher' : t.kind === 'refund' || t.kind === 'deposit_return' ? 'refund_receipt' : 'receipt', { transactionId: t.id });
                     if (r.ok) openOverlay({ kind: 'viewDocument', documentId: r.value.id }); else toast.error(r.error);
                   } },
-                  ...t.attachments.map((a) => ({ label: `Open ${a.name}`, icon: <Paperclip />, onClick: () => { const w = window.open(); if (w) w.document.write(`<title>${a.name}</title><img src="${a.dataUrl}" style="max-width:100%">`); } })),
+                  ...t.attachments.map((a) => ({ label: `Open ${a.name}`, icon: <Paperclip />, onClick: () => downloadBlob(dataUrlToBlob(a.dataUrl), a.name) })),
                   { label: 'Delete', icon: <Trash2 />, danger: true, onClick: () => remove(t), hidden: !canEdit },
                 ]} />
               </div>

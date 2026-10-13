@@ -15,14 +15,22 @@ npm run build        # type-check + production build (PWA with offline support)
 
 The first launch loads a realistic demo workspace: 3 properties, 8 units, about 7 months of bookings, payments and expenses, plus staff and tasks. **Settings → Data & backups** lets you reload the demo or start fresh.
 
-### Mobile apps
+### Mobile apps (iOS & Android)
+
+Native shells are built with Capacitor 8 from the same web build. Inside the apps:
+- **Files:** PDF receipts, invoices and report exports open the native share sheet (Save to Files, WhatsApp, Mail, Print).
+- **Notifications:** on-device reminders, an 8 am briefing on busy days and alerts before bills fall due, delivered even when the app is closed.
+- **Native feel:** status bar matched to the theme, branded icon and splash screen, haptics, and the Android back button closes drawers before navigating back.
 
 ```bash
-npm run cap:ios       # build, sync, open Xcode
-npm run cap:android   # build, sync, open Android Studio
+npm run android:apk   # build → sync → debug APK (installs on any Android phone)
+npm run cap:android   # open in Android Studio
+npm run cap:ios       # open in Xcode → pick your Team under Signing → Run on iPhone
+npm run assets        # regenerate icons & splash from scripts/make-app-assets.mjs
 ```
 
-The iOS project targets iOS 15+, which current Xcode requires. `.ruby-version` pins the rbenv Ruby that has CocoaPods, and `cap:sync` clears the `._*` metadata files this external drive creates (they confuse CocoaPods).
+- **Android:** needs Android Studio (its bundled JDK 21 and SDK 36). The APK lands in `$STAYSUITE_BUILD_DIR/app/outputs/apk/debug/`. On external drives, set `STAYSUITE_BUILD_DIR` (the npm script defaults it to `~/Library/Caches/staysuite-android`): macOS writes `._*` files on exFAT volumes, and these break Android resource merging. For Play Store release, create an upload keystore and run `./gradlew bundleRelease`.
+- **iOS:** needs Xcode 26+ (iOS 15+ target). Dependencies come through Swift Package Manager, so there's no CocoaPods step. A real-device or App Store build needs an Apple Developer team selected in Xcode → App target → Signing & Capabilities.
 
 ## Architecture
 
