@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">StaySuite</string>
+    <string name="title_activity_main">StaySuite</string>
+    <string name="package_name">app.staysuite.host</string>
+    <string name="custom_url_scheme">app.staysuite.host</string>
+</resources>
